@@ -826,9 +826,13 @@ void EventHub::Device::trackInputEvent(const struct input_event& event) {
             break;
         }
         case EV_SW: {
+            bool swValue = event.value != 0;
+            if (event.code == SW_LID) {
+                swValue = (event.value == 1);
+            }
             LOG_ALWAYS_FATAL_IF(!currentFrameDropped &&
                                         !swState.set(static_cast<size_t>(event.code),
-                                                     event.value != 0),
+                                                     swValue),
                                 "%s: device '%s' received invalid EV_SW event code: %s value: %d",
                                 __func__, identifier.name.c_str(),
                                 InputEventLookup::getLinuxEvdevLabel(EV_SW, event.code, 1)

@@ -16,6 +16,7 @@
 
 #include "../Macros.h"
 
+#include <linux/input-event-codes.h>
 #include "SwitchInputMapper.h"
 
 namespace android {
@@ -47,7 +48,11 @@ std::list<NotifyArgs> SwitchInputMapper::process(const RawEvent& rawEvent) {
 
 void SwitchInputMapper::processSwitch(int32_t switchCode, int32_t switchValue) {
     if (switchCode >= 0 && switchCode < 32) {
-        if (switchValue) {
+        bool swValue = switchValue != 0;
+        if (switchCode == SW_LID) {
+            swValue = (switchValue == 1);
+        }
+        if (swValue) {
             mSwitchValues |= 1 << switchCode;
         } else {
             mSwitchValues &= ~(1 << switchCode);
