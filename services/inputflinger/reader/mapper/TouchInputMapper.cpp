@@ -32,6 +32,7 @@
 
 #include <math.h>
 
+#include <android-base/properties.h>
 #include <android-base/logging.h>
 #include <android-base/stringprintf.h>
 #include <android/input.h>
@@ -383,7 +384,10 @@ TouchInputMapper::Parameters TouchInputMapper::computeParameters(
     if (parameters.deviceType == Parameters::DeviceType::TOUCH_SCREEN) {
         parameters.associatedDisplayIsExternal = deviceContext.isExternal();
         parameters.uniqueDisplayId = config.getString("touch.displayId").value_or("").c_str();
-        if (parameters.uniqueDisplayId.empty()) {
+
+        static const bool isWinglm = (android::base::GetProperty("ro.product.device", "") == "winglm");
+
+        if (isWinglm && parameters.uniqueDisplayId.empty()) {
             std::optional<int32_t> displayAssociatedPort =
                     config.getInt("touch.displayAssociatedPort");
             if (displayAssociatedPort.has_value()) {
@@ -508,14 +512,19 @@ std::optional<DisplayViewport> TouchInputMapper::findViewport() {
 
     // 3. Get the matching viewport if uniqueDisplayId is specified in idc file.
     if (!mParameters.uniqueDisplayId.empty()) {
-        char* endptr;
-        uint64_t port = strtoull(mParameters.uniqueDisplayId.c_str(), &endptr, 10);
-        if (*endptr == '\0' && port <= UINT8_MAX) {
-            std::optional<DisplayViewport> viewport =
-                    mConfig.getDisplayViewportByPort(static_cast<uint8_t>(port));
-            if (viewport) {
-                return viewport;
-            }
+
+        static const bool isWinglm = (android::base::GetProperty("ro.product.device", "") == "winglm");
+
+        if(isWinglm) {
+          char* endptr;
+          uint64_t port = strtoull(mParameters.uniqueDisplayId.c_str(), &endptr, 10);
+          if (*endptr == '\0' && port <= UINT8_MAX) {
+              std::optional<DisplayViewport> viewport =
+                      mConfig.getDisplayViewportByPort(static_cast<uint8_t>(port));
+              if (viewport) {
+                  return viewport;
+              }
+          }
         }
         return mConfig.getDisplayViewportByUniqueId(mParameters.uniqueDisplayId);
     }

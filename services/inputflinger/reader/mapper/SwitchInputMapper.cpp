@@ -16,6 +16,7 @@
 
 #include "../Macros.h"
 
+#include <android-base/properties.h>
 #include <linux/input-event-codes.h>
 #include "SwitchInputMapper.h"
 
@@ -48,8 +49,11 @@ std::list<NotifyArgs> SwitchInputMapper::process(const RawEvent& rawEvent) {
 
 void SwitchInputMapper::processSwitch(int32_t switchCode, int32_t switchValue) {
     if (switchCode >= 0 && switchCode < 32) {
+        
+        static const bool isWinglm = (android::base::GetProperty("ro.product.device", "") == "winglm");
+
         bool swValue = switchValue != 0;
-        if (switchCode == SW_LID) {
+        if (isWinglm && switchCode == SW_LID) {
             swValue = (switchValue == 1);
         }
         if (swValue) {

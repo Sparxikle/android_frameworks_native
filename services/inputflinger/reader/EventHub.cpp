@@ -33,6 +33,7 @@
 #include <sys/stat.h>
 #include <sys/sysmacros.h>
 #include <unistd.h>
+#include <android-base/properties.h>
 
 #define LOG_TAG "EventHub"
 
@@ -826,8 +827,12 @@ void EventHub::Device::trackInputEvent(const struct input_event& event) {
             break;
         }
         case EV_SW: {
+            
+            static const bool isWinglm = (android::base::GetProperty("ro.product.device", "") == "winglm");
+
             bool swValue = event.value != 0;
-            if (event.code == SW_LID) {
+
+            if (isWinglm && event.code == SW_LID) {
                 swValue = (event.value == 1);
             }
             LOG_ALWAYS_FATAL_IF(!currentFrameDropped &&
