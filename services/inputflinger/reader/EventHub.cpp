@@ -2403,7 +2403,11 @@ void EventHub::openDeviceLocked(const std::string& devicePath) {
         // a touch screen.
         if (device->keyBitmask.test(BTN_TOUCH) || !haveGamepadButtons) {
             device->classes |= (InputDeviceClass::TOUCH | InputDeviceClass::TOUCH_MT);
-            if (device->propBitmask.test(INPUT_PROP_POINTER) &&
+            // A clickpad (INPUT_PROP_BUTTONPAD) is always an indirect touchpad, even when the
+            // driver doesn't also set INPUT_PROP_POINTER.
+            if ((device->propBitmask.test(INPUT_PROP_POINTER) ||
+                 device->propBitmask.test(INPUT_PROP_BUTTONPAD)) &&
+                !device->propBitmask.test(INPUT_PROP_DIRECT) &&
                 !device->keyBitmask.any(BTN_TOOL_PEN, BTN_TOOL_FINGER) && !haveStylusButtons) {
                 device->classes |= InputDeviceClass::TOUCHPAD;
             }
